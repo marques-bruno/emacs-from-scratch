@@ -483,21 +483,84 @@
   :config
   (setq typescript-indent-level 2))
 
+(use-package flycheck)
 (use-package python-mode
   :ensure t
   :hook (python-mode . lsp-deferred)
   :custom
   ;; NOTE: Set these if Python 3 is called "python3" on your system!
-  ;; (python-shell-interpreter "python3")
-  ;; (dap-python-executable "python3")
-  (dap-python-debugger 'debugpy)
-  :config
-  (require 'dap-python))
+  (python-shell-interpreter "/usr/bin/python3")
+  (require 'dap-python)
+)
 
-(use-package pyvenv
-  :after python-mode
-  :config
-  (pyvenv-mode 1))
+;; (use-package pyvenv
+;;   :after python-mode
+;;   :config
+;;   (pyvenv-mode 1))
+
+;; clang-format
+(use-package clang-format)
+
+(add-hook 'c-mode-common-hook
+           (function (lambda ()
+                    (add-hook 'write-contents-functions
+                              (lambda() (progn (clang-format-buffer) nil))))))
+ (add-hook 'cpp-mode-common-hook
+          (function (lambda ()
+                      (add-hook 'write-contents-functions
+                                (lambda() (progn (clang-format-buffer) nil))))))
+
+(add-hook 'c++-mode-hook 'lsp-deferred)
+(add-hook 'c-mode-hook 'lsp-deferred)
+
+(global-set-key (kbd "C-c l = r") 'clang-format-region)
+(global-set-key (kbd "C-c l = =") 'clang-format-buffer)
+
+(setq gc-cons-threshold (* 100 1024 1024)
+      read-process-output-max (* 1024 1024)
+      treemacs-space-between-root-nodes nil
+      company-idle-delay 0.0
+      company-minimum-prefix-length 1
+      lsp-idle-delay 0.1)  ;; clangd is fast
+
+(with-eval-after-load 'lsp-mode
+  (require 'dap-cpptools))
+
+;; ;; THIS SNIPPET WAS RAN ONCE AND ENABLED SOME FEATURES I DIDNT HAVE BEFORE...
+;; ;; INCLUDING HELM SUPPORT, WHICH IS PRETTY GREAT. DO NOT DELETE AND YOU MIGHT WANT
+;; ;; TO EVAL THIS SNIPPET AT LEAST ONCE ON A NEW SYSTEM. MAYBE I SHOULD EVEN HAVE IT PERSISTENT... WE'LL SEE
+;; (use-package lsp-mode)
+;; (use-package yasnippet)
+;; (use-package lsp-treemacs)
+;; (use-package helm-lsp)
+;; (use-package hydra)
+;; (use-package avy)
+;; (use-package helm-xref)
+;; (use-package dap-mode)
+;; (use-package flycheck)
+
+;; ;; sample `helm' configuration use https://github.com/emacs-helm/helm/ for details
+;; (helm-mode)
+;; (require 'helm-xref)
+;; (define-key global-map [remap find-file] #'helm-find-files)
+;; (define-key global-map [remap execute-extended-command] #'helm-M-x)
+;; (define-key global-map [remap switch-to-buffer] #'helm-mini)
+
+;; (which-key-mode)
+;; (add-hook 'c-mode-hook 'lsp)
+;; (add-hook 'c++-mode-hook 'lsp)
+
+;; (setq gc-cons-threshold (* 100 1024 1024)
+;;       read-process-output-max (* 1024 1024)
+;;       treemacs-space-between-root-nodes nil
+;;       company-idle-delay 0.0
+;;       company-minimum-prefix-length 1
+;;       lsp-idle-delay 0.1)  ;; clangd is fast
+
+;; (with-eval-after-load 'lsp-mode
+;;   (add-hook 'lsp-mode-hook #'lsp-enable-which-key-integration)
+;;   (require 'dap-cpptools)
+;;   (yas-global-mode))
 
 (use-package cmake-mode
   :defer t
@@ -626,34 +689,54 @@
   (eshell-git-prompt-use-theme 'powerline))
 
 (use-package dired
-  :ensure nil
-  :commands (dired dired-jump)
-  :bind (("C-x C-j" . dired-jump))
-  :custom ((dired-listing-switches "-agho --group-directories-first"))
-  :config
-  (evil-collection-define-key 'normal 'dired-mode-map
-    "h" 'dired-single-up-directory
-    "l" 'dired-single-buffer))
+    :ensure nil
+    :commands (dired dired-jump)
+    :bind (("C-x C-j" . dired-jump))
+    :custom ((dired-listing-switches "-agho --group-directories-first"))
+    :config
+    (evil-collection-define-key 'normal 'dired-mode-map
+      "h" 'dired-single-up-directory
+      "l" 'dired-single-buffer))
 
-(use-package dired-single
-  :commands (dired dired-jump))
+;; Only open 1 dired buffer when moving around in dired
+  (use-package dired-single
+    :commands (dired dired-jump))
 
-(use-package all-the-icons-dired
-  :hook (dired-mode . all-the-icons-dired-mode))
+(defun my-dired-init ()
+  "Bunch of stuff to run for dired, either immediately or when it's
+   loaded."
+  ;; <add other stuff here>
+  (define-key dired-mode-map [remap dired-find-file]
+    'dired-single-buffer)
+  (define-key dired-mode-map [remap dired-mouse-find-file-other-window]
+    'dired-single-buffer-mouse)
+  (define-key dired-mode-map [remap dired-up-directory]
+    'dired-single-up-directory))
 
-(use-package dired-open
-  :commands (dired dired-jump)
-  :config
-  ;; Doesn't work as expected!
-  ;;(add-to-list 'dired-open-functions #'dired-open-xdg t)
-  (setq dired-open-extensions '(("png" . "feh")
-                                ("mkv" . "mpv"))))
+;; if dired's already loaded, then the keymap will be bound
+(if (boundp 'dired-mode-map)
+    ;; we're good to go; just add our bindings
+    (my-dired-init)
+  ;; it's not loaded yet, so add our bindings to the load-hook
+  (add-hook 'dired-load-hook 'my-dired-init))
+  
 
-(use-package dired-hide-dotfiles
-  :hook (dired-mode . dired-hide-dotfiles-mode)
-  :config
-  (evil-collection-define-key 'normal 'dired-mode-map
-    "H" 'dired-hide-dotfiles-mode))
+  (use-package all-the-icons-dired
+    :hook (dired-mode . all-the-icons-dired-mode))
+
+  (use-package dired-open
+    :commands (dired dired-jump)
+    :config
+    ;; Doesn't work as expected!
+    ;;(add-to-list 'dired-open-functions #'dired-open-xdg t)
+    (setq dired-open-extensions '(("png" . "feh")
+                                  ("mkv" . "mpv"))))
+
+  (use-package dired-hide-dotfiles
+    :hook (dired-mode . dired-hide-dotfiles-mode)
+    :config
+    (evil-collection-define-key 'normal 'dired-mode-map
+      "H" 'dired-hide-dotfiles-mode))
 
 ;; Make gc pauses faster by decreasing the threshold.
 (setq gc-cons-threshold (* 2 1000 1000))

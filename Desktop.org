@@ -19,14 +19,14 @@ We use the excellent [[https://github.com/ch11ng/exwm][EXWM]] module as the basi
     (interactive)
     ;; NOTE: You will need to update this to a valid background path!
     (start-process-shell-command
-        "feh" nil  "feh --bg-scale /usr/share/backgrounds/matt-mcnulty-nyc-2nd-ave.jpg"))
+        "feh" nil  "feh --bg-scale /usr/share/backgrounds/coffee.jpg"))
 
   (defun efs/exwm-init-hook ()
     ;; Make workspace 1 be the one where we land at startup
     (exwm-workspace-switch-create 1)
 
     ;; Open eshell by default
-    (eshell)
+    (vterm)
 
     ;; NOTE: The next two are disabled because we now use Polybar!
 
@@ -190,7 +190,49 @@ We use the excellent [[https://github.com/ch11ng/exwm][EXWM]] module as the basi
 
     (exwm-input-set-key (kbd "s-SPC") 'counsel-linux-app)
     (exwm-input-set-key (kbd "s-f") 'exwm-layout-toggle-fullscreen)
-    
+
+;; SESSION MANAGEMENT
+ ;; use only one desktop
+(setq desktop-path '("~/.emacs.d/"))
+(setq desktop-dirname "~/.emacs.d/")
+(setq desktop-base-file-name "emacs-desktop")
+
+;; remove desktop after it's been read
+(add-hook 'desktop-after-read-hook
+	  '(lambda ()
+	     ;; desktop-remove clears desktop-dirname
+	     (setq desktop-dirname-tmp desktop-dirname)
+	     (desktop-remove)
+	     (setq desktop-dirname desktop-dirname-tmp)))
+
+(defun saved-session ()
+  (file-exists-p (concat desktop-dirname "/" desktop-base-file-name)))
+
+;; use session-restore to restore the desktop manually
+(defun session-restore ()
+  "Restore a saved emacs session."
+  (interactive)
+  (if (saved-session)
+      (desktop-read)
+    (message "No desktop found.")))
+
+;; use session-save to save the desktop manually
+(defun session-save ()
+  "Save an emacs session."
+  (interactive)
+  (if (saved-session)
+      (if (y-or-n-p "Overwrite existing desktop? ")
+	  (desktop-save-in-desktop-dir)
+	(message "Session not saved."))
+  (desktop-save-in-desktop-dir)))
+
+;; ask user whether to restore desktop at start-up
+(add-hook 'after-init-hook
+	  '(lambda ()
+	     (if (saved-session)
+		 (if (y-or-n-p "Restore desktop? ")
+		     (session-restore)))))
+   
     (exwm-enable))
 
 #+end_src
@@ -255,6 +297,8 @@ This launcher script is invoked by =EXWM.desktop= to start Emacs and load our de
 
   # Enable screen locking on suspend
   xss-lock -- slock &
+
+  setxkb us intl
 
   # Fire it up
   exec dbus-launch --exit-with-session emacs -mm --debug-init -l /home/bruno/.emacs.d/desktop.el
@@ -348,7 +392,7 @@ underline-1 = #c792ea
 
 [bar/panel]
 width = 100%
-height = 35
+height = 20
 offset-x = 0
 offset-y = 0
 fixed-center = true
@@ -357,7 +401,7 @@ enable-ipc = true
 background = ${colors.background}
 foreground = ${colors.foreground}
 
-line-size = 2
+line-size = 0
 line-color = #f00
 
 border-size = 0
@@ -369,17 +413,18 @@ padding-right = 1
 
 module-margin = 1
 
-font-0 = "Cantarell:size=18:weight=bold;2"
-font-1 = "Font Awesome:size=14;2"
-font-2 = "Material Icons:size=20;5"
+font-0 = "Cantarell:size=10:weight=regular;2"
+font-1 = "Font Awesome:size=12;2"
+font-2 = "Material Icons:size=15;5"
 font-3 = "Fira Mono:size=13;-3"
 
 modules-left = exwm-workspace
-modules-right = cpu temperature battery date
+modules-center = date
+modules-right = cpu temperature battery
 
 tray-position = right
 tray-padding = 2
-tray-maxsize = 28
+tray-maxsize = 20
 
 cursor-click = pointer
 cursor-scroll = ns-resize
@@ -410,7 +455,7 @@ ramp-coreload-6 = ▇
 
 [module/date]
 type = internal/date
-interval = 5
+interval = 1
 
 date = "%a %b %e"
 date-alt = "%A %B %d %Y"
@@ -488,207 +533,262 @@ Here are some things you might want to consider changing:
 #+begin_src conf :tangle ~/.config/dunst/dunstrc :mkdirp yes
 
 [global]
-    ### Display ###
-    monitor = 0
+font = Cantarell 9
 
-    # The geometry of the window:
-    #   [{width}]x{height}[+/-{x}+/-{y}]
-    geometry = "500x10-10+50"
+# Allow a small subset of html markup:
+#   <b>bold</b>
+#   <i>italic</i>
+#   <s>strikethrough</s>
+#   <u>underline</u>
+#
+# For a complete reference see
+# <http://developer.gnome.org/pango/stable/PangoMarkupFormat.html>.
+# If markup is not allowed, those tags will be stripped out of the
+# message.
+markup = yes
+plain_text = no
 
-    # Show how many messages are currently hidden (because of geometry).
-    indicate_hidden = yes
+# The format of the message.  Possible variables are:
+#   %a  appname
+#   %s  summary
+#   %b  body
+#   %i  iconname (including its path)
+#   %I  iconname (without its path)
+#   %p  progress value if set ([  0%] to [100%]) or nothing
+# Markup is allowed
+format = "%s\n%b"
 
-    # Shrink window if it's smaller than the width.  Will be ignored if
-    # width is 0.
-    shrink = no
+# Sort messages by urgency.
+sort = no
 
-    # The transparency of the window.  Range: [0; 100].
-    transparency = 10
+# Show how many messages are currently hidden (because of geometry).
+indicate_hidden = yes
 
-    # The height of the entire notification.  If the height is smaller
-    # than the font height and padding combined, it will be raised
-    # to the font height and padding.
-    notification_height = 0
+# Alignment of message text.
+# Possible values are "left", "center" and "right".
+alignment = center
 
-    # Draw a line of "separator_height" pixel height between two
-    # notifications.
-    # Set to 0 to disable.
-    separator_height = 1
-    separator_color = frame
+# The frequency with wich text that is longer than the notification
+# window allows bounces back and forth.
+# This option conflicts with "word_wrap".
+# Set to 0 to disable.
+bounce_freq = 0
 
-    # Padding between text and separator.
-    padding = 8
+# Show age of message if message is older than show_age_threshold
+# seconds.
+# Set to -1 to disable.
+show_age_threshold = -1
 
-    # Horizontal padding.
-    horizontal_padding = 8
+# Split notifications into multiple lines if they don't fit into
+# geometry.
+word_wrap = yes
 
-    # Defines width in pixels of frame around the notification window.
-    # Set to 0 to disable.
-    frame_width = 2
+# Ignore newlines '\n' in notifications.
+ignore_newline = no
 
-    # Defines color of the frame around the notification window.
-    frame_color = "#89AAEB"
+# Hide duplicate's count and stack them
+stack_duplicates = yes
+hide_duplicate_count = yes
 
-    # Sort messages by urgency.
-    sort = yes
 
-    # Don't remove messages, if the user is idle (no mouse or keyboard input)
-    # for longer than idle_threshold seconds.
-    idle_threshold = 120
+# The geometry of the window:
+#   [{width}]x{height}[+/-{x}+/-{y}]
+# The geometry of the message window.
+# The height is measured in number of notifications everything else
+# in pixels.  If the width is omitted but the height is given
+# ("-geometry x2"), the message window expands over the whole screen
+# (dmenu-like).  If width is 0, the window expands to the longest
+# message displayed.  A positive x is measured from the left, a
+# negative from the right side of the screen.  Y is measured from
+# the top and down respectevly.
+# The width can be negative.  In this case the actual width is the
+# screen width minus the width defined in within the geometry option.
+#geometry = "250x50-40+40"
+geometry = "300x50-15+49"
 
-    ### Text ###
+# Shrink window if it's smaller than the width.  Will be ignored if
+# width is 0.
+shrink = no
 
-    font = Cantarell 20
+# The transparency of the window.  Range: [0; 100].
+# This option will only work if a compositing windowmanager is
+# present (e.g. xcompmgr, compiz, etc.).
+transparency = 5
 
-    # The spacing between lines.  If the height is smaller than the
-    # font height, it will get raised to the font height.
-    line_height = 0
-    markup = full
+# Don't remove messages, if the user is idle (no mouse or keyboard input)
+# for longer than idle_threshold seconds.
+# Set to 0 to disable.
+idle_threshold = 0
 
-    # The format of the message.  Possible variables are:
-    #   %a  appname
-    #   %s  summary
-    #   %b  body
-    #   %i  iconname (including its path)
-    #   %I  iconname (without its path)
-    #   %p  progress value if set ([  0%] to [100%]) or nothing
-    #   %n  progress value if set without any extra characters
-    #   %%  Literal %
-    # Markup is allowed
-    format = "<b>%s</b>\n%b"
+# Which monitor should the notifications be displayed on.
+monitor = 0
 
-    # Alignment of message text.
-    # Possible values are "left", "center" and "right".
-    alignment = left
+# Display notification on focused monitor.  Possible modes are:
+#   mouse: follow mouse pointer
+#   keyboard: follow window with keyboard focus
+#   none: don't follow anything
+#
+# "keyboard" needs a windowmanager that exports the
+# _NET_ACTIVE_WINDOW property.
+# This should be the case for almost all modern windowmanagers.
+#
+# If this option is set to mouse or keyboard, the monitor option
+# will be ignored.
+follow = none
 
-    # Show age of message if message is older than show_age_threshold
-    # seconds.
-    # Set to -1 to disable.
-    show_age_threshold = 60
+# Should a notification popped up from history be sticky or timeout
+# as if it would normally do.
+sticky_history = yes
 
-    # Split notifications into multiple lines if they don't fit into
-    # geometry.
-    word_wrap = yes
+# Maximum amount of notifications kept in history
+history_length = 15
 
-    # When word_wrap is set to no, specify where to make an ellipsis in long lines.
-    # Possible values are "start", "middle" and "end".
-    ellipsize = middle
+# Display indicators for URLs (U) and actions (A).
+show_indicators = no
 
-    # Ignore newlines '\n' in notifications.
-    ignore_newline = no
+# The height of a single line.  If the height is smaller than the
+# font height, it will get raised to the font height.
+# This adds empty space above and under the text.
+line_height = 3
 
-    # Stack together notifications with the same content
-    stack_duplicates = true
+# Draw a line of "separatpr_height" pixel height between two
+# notifications.
+# Set to 0 to disable.
+separator_height = 2
 
-    # Hide the count of stacked notifications with the same content
-    hide_duplicate_count = false
+# Padding between text and separator.
+padding = 6
 
-    # Display indicators for URLs (U) and actions (A).
-    show_indicators = yes
+# Horizontal padding.
+horizontal_padding = 6
 
-    ### Icons ###
+# Define a color for the separator.
+# possible values are:
+#  * auto: dunst tries to find a color fitting to the background;
+#  * foreground: use the same color as the foreground;
+#  * frame: use the same color as the frame;
+#  * anything else will be interpreted as a X color.
+separator_color = frame
 
-    # Align icons left/right/off
-    icon_position = left
+# Print a notification on startup.
+# This is mainly for error detection, since dbus (re-)starts dunst
+# automatically after a crash.
+startup_notification = false
 
-    # Scale larger icons down to this size, set to 0 to disable
-    max_icon_size = 88
+# dmenu path.
+dmenu = /usr/bin/dmenu -p dunst:
 
-    # Paths to default icons.
-    icon_path = /usr/share/icons/Adwaita/96x96/status:/usr/share/icons/Adwaita/96x96/emblems
+# Browser for opening urls in context menu.
+browser = /usr/bin/firefox -new-tab
 
-    ### History ###
+# Align icons left/right/off
+icon_position = off
+max_icon_size = 80
 
-    # Should a notification popped up from history be sticky or timeout
-    # as if it would normally do.
-    sticky_history = no
+# Paths to default icons.
+icon_path = /usr/share/icons/Paper/16x16/mimetypes/:/usr/share/icons/Paper/48x48/status/:/usr/share/icons/Paper/16x16/devices/:/usr/share/icons/Paper/48x48/notifications/:/usr/share/icons/Paper/48x48/emblems/
 
-    # Maximum amount of notifications kept in history
-    history_length = 20
-
-    ### Misc/Advanced ###
-
-    # Browser for opening urls in context menu.
-    browser = qutebrowser
-
-    # Always run rule-defined scripts, even if the notification is suppressed
-    always_run_script = true
-
-    # Define the title of the windows spawned by dunst
-    title = Dunst
-
-    # Define the class of the windows spawned by dunst
-    class = Dunst
-
-    startup_notification = false
-    verbosity = mesg
-
-    # Define the corner radius of the notification window
-    # in pixel size. If the radius is 0, you have no rounded
-    # corners.
-    # The radius will be automatically lowered if it exceeds half of the
-    # notification height to avoid clipping text and/or icons.
-    corner_radius = 4
-
-    mouse_left_click = close_current
-    mouse_middle_click = do_action
-    mouse_right_click = close_all
-
-# Experimental features that may or may not work correctly. Do not expect them
-# to have a consistent behaviour across releases.
-[experimental]
-    # Calculate the dpi to use on a per-monitor basis.
-    # If this setting is enabled the Xft.dpi value will be ignored and instead
-    # dunst will attempt to calculate an appropriate dpi value for each monitor
-    # using the resolution and physical size. This might be useful in setups
-    # where there are multiple screens with very different dpi values.
-    per_monitor_dpi = false
+frame_width = 1
+frame_color = "#8EC07C"
 
 [shortcuts]
 
-    # Shortcuts are specified as [modifier+][modifier+]...key
-    # Available modifiers are "ctrl", "mod1" (the alt-key), "mod2",
-    # "mod3" and "mod4" (windows-key).
-    # Xev might be helpful to find names for keys.
+# Shortcuts are specified as [modifier+][modifier+]...key
+# Available modifiers are "ctrl", "mod1" (the alt-key), "mod2",
+# "mod3" and "mod4" (windows-key).
+# Xev might be helpful to find names for keys.
 
-    # Close notification.
-    #close = ctrl+space
+# Close notification.
+close = ctrl+space
 
-    # Close all notifications.
-    #close_all = ctrl+shift+space
+# Close all notifications.
+close_all = ctrl+shift+space
 
-    # Redisplay last message(s).
-    # On the US keyboard layout "grave" is normally above TAB and left
-    # of "1". Make sure this key actually exists on your keyboard layout,
-    # e.g. check output of 'xmodmap -pke'
-    history = ctrl+grave
+# Redisplay last message(s).
+# On the US keyboard layout "grave" is normally above TAB and left
+# of "1".
+history = ctrl+grave
 
-    # Context menu.
-    context = ctrl+shift+period
+# Context menu.
+context = ctrl+shift+period
 
 [urgency_low]
-    # IMPORTANT: colors have to be defined in quotation marks.
-    # Otherwise the "#" and following would be interpreted as a comment.
-    background = "#222222"
-    foreground = "#888888"
-    timeout = 10
-    # Icon for notifications with low urgency, uncomment to enable
-    #icon = /path/to/icon
+# IMPORTANT: colors have to be defined in quotation marks.
+# Otherwise the "#" and following would be interpreted as a comment.
+frame_color = "#3B7C87"
+foreground = "#3B7C87"
+background = "#191311"
+#background = "#2B313C"
+timeout = 4
 
 [urgency_normal]
-    background = "#1c1f26"
-    foreground = "#ffffff"
-    timeout = 10
-    # Icon for notifications with normal urgency, uncomment to enable
-    #icon = /path/to/icon
+frame_color = "#5B8234"
+foreground = "#5B8234"
+background = "#191311"
+#background = "#2B313C"
+timeout = 6
 
 [urgency_critical]
-    background = "#900000"
-    foreground = "#ffffff"
-    frame_color = "#ff0000"
-    timeout = 0
-    # Icon for notifications with critical urgency, uncomment to enable
-    #icon = /path/to/icon
+frame_color = "#B7472A"
+foreground = "#B7472A"
+background = "#191311"
+#background = "#2B313C"
+timeout = 8
+
+
+# Every section that isn't one of the above is interpreted as a rules to
+# override settings for certain messages.
+# Messages can be matched by "appname", "summary", "body", "icon", "category",
+# "msg_urgency" and you can override the "timeout", "urgency", "foreground",
+# "background", "new_icon" and "format".
+# Shell-like globbing will get expanded.
+#
+# SCRIPTING
+# You can specify a script that gets run when the rule matches by
+# setting the "script" option.
+# The script will be called as follows:
+#   script appname summary body icon urgency
+# where urgency can be "LOW", "NORMAL" or "CRITICAL".
+#
+# NOTE: if you don't want a notification to be displayed, set the format
+# to "".
+# NOTE: It might be helpful to run dunst -print in a terminal in order
+# to find fitting options for rules.
+
+#[espeak]
+#    summary = "*"
+#    script = dunst_espeak.sh
+
+#[script-test]
+#    summary = "*script*"
+#    script = dunst_test.sh
+
+#[ignore]
+#    # This notification will not be displayed
+#    summary = "foobar"
+#    format = ""
+
+#[signed_on]
+#    appname = Pidgin
+#    summary = "*signed on*"
+#    urgency = low
+#
+#[signed_off]
+#    appname = Pidgin
+#    summary = *signed off*
+#    urgency = low
+#
+#[says]
+#    appname = Pidgin
+#    summary = *says*
+#    urgency = critical
+#
+#[twitter]
+#    appname = Pidgin
+#    summary = *twitter.com*
+#    urgency = normal
+#
+# vim: ft=cfg
 
 #+end_src
 
@@ -696,16 +796,16 @@ We can also set up some functions for enabling and disabling notifications at an
 
 #+begin_src emacs-lisp
 
-  ;; (defun efs/disable-desktop-notifications ()
-  ;;   (interactive)
-  ;;   (start-process-shell-command "notify-send" nil "notify-send \"DUNST_COMMAND_PAUSE\""))
+  (defun efs/disable-desktop-notifications ()
+    (interactive)
+    (start-process-shell-command "notify-send" nil "notify-send \"DUNST_COMMAND_PAUSE\""))
 
-  ;; (defun efs/enable-desktop-notifications ()
-  ;;   (interactive)
-  ;;   (start-process-shell-command "notify-send" nil "notify-send \"DUNST_COMMAND_RESUME\""))
+  (defun efs/enable-desktop-notifications ()
+    (interactive)
+    (start-process-shell-command "notify-send" nil "notify-send \"DUNST_COMMAND_RESUME\""))
 
-  ;; (defun efs/toggle-desktop-notifications ()
-  ;;   (interactive)
-  ;;   (start-process-shell-command "notify-send" nil "notify-send \"DUNST_COMMAND_TOGGLE\""))
+  (defun efs/toggle-desktop-notifications ()
+    (interactive)
+    (start-process-shell-command "notify-send" nil "notify-send \"DUNST_COMMAND_TOGGLE\""))
 
 #+end_src
