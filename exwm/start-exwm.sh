@@ -5,10 +5,5 @@
 # Run the screen compositor
 compton &
 
-# Enable screen locking on suspend
-xss-lock -- slock &
-
-setxkb us intl
-
 # Fire it up
 exec dbus-launch --exit-with-session emacs -mm --debug-init -l /home/bruno/.emacs.d/desktop.el

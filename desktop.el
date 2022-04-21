@@ -157,7 +157,7 @@
             ([s-right] . windmove-right)
             ([s-up] . windmove-up)
             ([s-down] . windmove-down)
-            
+
             ;; Launch applications via shell command
             ([?\s-&] . (lambda (command)
                          (interactive (list (read-shell-command "$ ")))
@@ -175,6 +175,11 @@
                             (exwm-workspace-switch-create ,i))))
                       (number-sequence 0 9))))
 
+    (define-key (current-global-map) (kbd "s-h") 'windmove-left)
+    (define-key (current-global-map) (kbd "s-l") 'windmove-right)
+    (define-key (current-global-map) (kbd "s-j") 'windmove-down)
+    (define-key (current-global-map) (kbd "s-k") 'windmove-up)
+
     (exwm-input-set-key (kbd "s-SPC") 'counsel-linux-app)
     (exwm-input-set-key (kbd "s-f") 'exwm-layout-toggle-fullscreen)
 
@@ -186,11 +191,11 @@
 
 ;; remove desktop after it's been read
 (add-hook 'desktop-after-read-hook
-	  '(lambda ()
-	     ;; desktop-remove clears desktop-dirname
-	     (setq desktop-dirname-tmp desktop-dirname)
-	     (desktop-remove)
-	     (setq desktop-dirname desktop-dirname-tmp)))
+          '(lambda ()
+             ;; desktop-remove clears desktop-dirname
+             (setq desktop-dirname-tmp desktop-dirname)
+             (desktop-remove)
+             (setq desktop-dirname desktop-dirname-tmp)))
 
 (defun saved-session ()
   (file-exists-p (concat desktop-dirname "/" desktop-base-file-name)))
@@ -209,17 +214,17 @@
   (interactive)
   (if (saved-session)
       (if (y-or-n-p "Overwrite existing desktop? ")
-	  (desktop-save-in-desktop-dir)
-	(message "Session not saved."))
+          (desktop-save-in-desktop-dir)
+        (message "Session not saved."))
   (desktop-save-in-desktop-dir)))
 
 ;; ask user whether to restore desktop at start-up
 (add-hook 'after-init-hook
-	  '(lambda ()
-	     (if (saved-session)
-		 (if (y-or-n-p "Restore desktop? ")
-		     (session-restore)))))
-   
+          '(lambda ()
+             (if (saved-session)
+                 (if (y-or-n-p "Restore desktop? ")
+                     (session-restore)))))
+
     (exwm-enable))
 
 (use-package desktop-environment
