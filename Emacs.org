@@ -1,6 +1,30 @@
 #+title: Emacs From Scratch Configuration
 #+PROPERTY: header-args:emacs-lisp :tangle ./init.el :mkdirp yes
 
+* SETUP STEPS:
+
+The following packages (on ubuntu 20.04) are required for this setup to run smoothly
+
+#+begin_src shell :tangle no
+
+build-essential
+git
+fonts-font-awesome
+fonts-cantarell
+fonts-firacode
+libvterm0
+
+# emacs27 is recommended and must be installed from external repository. instructions are easy to find
+
+#+end_src
+
+The following command should be ran on emacs  after everything is installed:
+
+#+begin_src shell :tangle no
+M-x all-the-icons-install-fonts
+#+end_src
+
+
 * Welcome!
 
 This is the configuration we've been building in the *Emacs From Scratch* series, now written as an Org Mode document.  This file generates [[file:init.el][init.el]] which can be loaded by Emacs at startup.
@@ -157,6 +181,8 @@ I am using the [[https://github.com/tonsky/FiraCode][Fira Code]] and [[https://f
 
 #+begin_src emacs-lisp
 
+(use-package all-the-icons)
+
 (set-face-attribute 'default nil :font "Fira Code Retina" :height efs/default-font-size)
 
 ;; Set the fixed pitch face
@@ -245,8 +271,6 @@ This configuration uses [[https://evil.readthedocs.io/en/latest/index.html][evil
 *NOTE:* The first time you load your configuration on a new machine, you'll need to run `M-x all-the-icons-install-fonts` so that mode line icons display correctly.
 
 #+begin_src emacs-lisp
-
-(use-package all-the-icons)
 
 (use-package doom-modeline
   :init (doom-modeline-mode 1)
@@ -746,6 +770,7 @@ Try these commands with =M-x=:
       :prefix lsp-keymap-prefix
       "d" '(dap-hydra t :wk "debugger")))
 
+      message()
 #+end_src
 
 *** TypeScript
@@ -843,41 +868,41 @@ You can use the pyvenv package to use =virtualenv= environments in Emacs.  The =
 (with-eval-after-load 'lsp-mode
   (require 'dap-cpptools))
 
-;; ;; THIS SNIPPET WAS RAN ONCE AND ENABLED SOME FEATURES I DIDNT HAVE BEFORE...
-;; ;; INCLUDING HELM SUPPORT, WHICH IS PRETTY GREAT. DO NOT DELETE AND YOU MIGHT WANT
-;; ;; TO EVAL THIS SNIPPET AT LEAST ONCE ON A NEW SYSTEM. MAYBE I SHOULD EVEN HAVE IT PERSISTENT... WE'LL SEE
-;; (use-package lsp-mode)
-;; (use-package yasnippet)
-;; (use-package lsp-treemacs)
-;; (use-package helm-lsp)
-;; (use-package hydra)
-;; (use-package avy)
-;; (use-package helm-xref)
-;; (use-package dap-mode)
-;; (use-package flycheck)
+;; THIS SNIPPET WAS RAN ONCE AND ENABLED SOME FEATURES I DIDNT HAVE BEFORE...
+;; INCLUDING HELM SUPPORT, WHICH IS PRETTY GREAT. DO NOT DELETE AND YOU MIGHT WANT
+;; TO EVAL THIS SNIPPET AT LEAST ONCE ON A NEW SYSTEM. MAYBE I SHOULD EVEN HAVE IT PERSISTENT... WE'LL SEE
+(use-package lsp-mode)
+(use-package yasnippet)
+(use-package lsp-treemacs)
+(use-package helm-lsp)
+(use-package hydra)
+(use-package avy)
+(use-package helm-xref)
+(use-package dap-mode)
+(use-package flycheck)
 
-;; ;; sample `helm' configuration use https://github.com/emacs-helm/helm/ for details
-;; (helm-mode)
-;; (require 'helm-xref)
-;; (define-key global-map [remap find-file] #'helm-find-files)
-;; (define-key global-map [remap execute-extended-command] #'helm-M-x)
-;; (define-key global-map [remap switch-to-buffer] #'helm-mini)
+;; sample `helm' configuration use https://github.com/emacs-helm/helm/ for details
+(helm-mode)
+(require 'helm-xref)
+(define-key global-map [remap find-file] #'helm-find-files)
+(define-key global-map [remap execute-extended-command] #'helm-M-x)
+(define-key global-map [remap switch-to-buffer] #'helm-mini)
 
-;; (which-key-mode)
-;; (add-hook 'c-mode-hook 'lsp)
-;; (add-hook 'c++-mode-hook 'lsp)
+(which-key-mode)
+(add-hook 'c-mode-hook 'lsp)
+(add-hook 'c++-mode-hook 'lsp)
 
-;; (setq gc-cons-threshold (* 100 1024 1024)
-;;       read-process-output-max (* 1024 1024)
-;;       treemacs-space-between-root-nodes nil
-;;       company-idle-delay 0.0
-;;       company-minimum-prefix-length 1
-;;       lsp-idle-delay 0.1)  ;; clangd is fast
+(setq gc-cons-threshold (* 100 1024 1024)
+      read-process-output-max (* 1024 1024)
+      treemacs-space-between-root-nodes nil
+      company-idle-delay 0.0
+      company-minimum-prefix-length 1
+      lsp-idle-delay 0.1)  ;; clangd is fast
 
-;; (with-eval-after-load 'lsp-mode
-;;   (add-hook 'lsp-mode-hook #'lsp-enable-which-key-integration)
-;;   (require 'dap-cpptools)
-;;   (yas-global-mode))
+(with-eval-after-load 'lsp-mode
+  (add-hook 'lsp-mode-hook #'lsp-enable-which-key-integration)
+  (require 'dap-cpptools)
+  (yas-global-mode))
 
 #+end_src
 

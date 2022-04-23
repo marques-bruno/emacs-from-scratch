@@ -1,6 +1,58 @@
 #+title: Emacs Desktop Environment
 #+PROPERTY: header-args:emacs-lisp :tangle ./desktop.el
 
+* FIRST INSTALL:
+On First run, install the following programs, before compiling polybar from sources:
+
+#+begin_src shell :tangle no
+
+compton
+feh
+pasystray
+blueman
+dunst
+libxcb-xkb-dev
+libpulse-dev
+libmpd-dev
+libmpdclient-dev
+wireless-tools
+xbacklight
+cmake
+cmake-data
+libcairo2-dev
+libxcb1-dev
+libxcb-ewmh-dev
+libxcb-icccm4-dev
+libxcb-image0-dev
+libxcb-randr0-dev
+libxcb-util0-dev
+libxcb-xkb-dev
+pkg-config
+python3-xcbgen
+xcb-proto
+libxcb-xrm-dev
+libasound2-dev
+libmpdclient-dev
+libiw-dev
+libcurl4-openssl-dev
+libpulse-dev
+python3-sphinx
+libcairo2-dev
+ccache
+libuv1-dev
+libcurl4-gnutls-dev
+libiw-dev
+libxcb-randr0-dev
+pkg-config
+libxcb1-dev
+xcb-proto
+libxcb-util0-dev
+libxcb-image0-dev
+libxcb-composite0-dev
+libxcb-icccm4-dev
+
+#+end_src
+
 * Window Management
 
 ** EXWM Configuration
@@ -10,7 +62,6 @@ We use the excellent [[https://github.com/ch11ng/exwm][EXWM]] module as the basi
 *NOTE:* Make sure you've installed =nm-applet=, =pasystray= and =blueman= for the system tray apps to work!
 
 #+begin_src emacs-lisp
-
     (defun efs/run-in-background (command)
       (let ((command-parts (split-string command "[ ]+")))
         (apply #'call-process `(,(car command-parts) nil 0 nil ,@(cdr command-parts)))))
@@ -19,7 +70,7 @@ We use the excellent [[https://github.com/ch11ng/exwm][EXWM]] module as the basi
       (interactive)
       ;; NOTE: You will need to update this to a valid background path!
       (start-process-shell-command
-          "feh" nil  "feh --bg-scale /usr/share/backgrounds/coffee.jpg"))
+          "feh" nil  "feh --bg-scale /usr/share/backgrounds/ubuntu-default-greyscale-wallpaper.png"))
 
     (defun efs/exwm-init-hook ()
       ;; Make workspace 1 be the one where we land at startup
@@ -188,10 +239,10 @@ We use the excellent [[https://github.com/ch11ng/exwm][EXWM]] module as the basi
                               (exwm-workspace-switch-create ,i))))
                         (number-sequence 0 9))))
                         
-      (define-key (current-global-map) (kbd "s-h") 'windmove-left)
-      (define-key (current-global-map) (kbd "s-l") 'windmove-right)
-      (define-key (current-global-map) (kbd "s-j") 'windmove-down)
-      (define-key (current-global-map) (kbd "s-k") 'windmove-up)
+      (define-key (current-global-map) (kbd "s-M-h") 'windmove-left)
+      (define-key (current-global-map) (kbd "s-M-l") 'windmove-right)
+      (define-key (current-global-map) (kbd "s-M-j") 'windmove-down)
+      (define-key (current-global-map) (kbd "s-M-k") 'windmove-up)
 
       (exwm-input-set-key (kbd "s-SPC") 'counsel-linux-app)
       (exwm-input-set-key (kbd "s-f") 'exwm-layout-toggle-fullscreen)
@@ -271,7 +322,7 @@ This file is used by your "login manager" (GDM, LightDM, etc) to display EXWM as
 
 #+begin_src sh :tangle no
 
-sudo ln -f ~/.emacs.d/exwm/EXWM.desktop /usr/share/xsessions/EXWM.desktop
+sudo ln -f ~/.config/emacs/exwm/EXWM.desktop /usr/share/xsessions/EXWM.desktop
 
 #+end_src
 
@@ -280,7 +331,7 @@ sudo ln -f ~/.emacs.d/exwm/EXWM.desktop /usr/share/xsessions/EXWM.desktop
   [Desktop Entry]
   Name=EXWM
   Comment=Emacs Window Manager
-  Exec=sh /home/bruno/.emacs.d/exwm/start-exwm.sh
+  Exec=sh /home/bruno/.config/emacs/exwm/start-exwm.sh
   TryExec=sh
   Type=Application
   X-LightDM-DesktopName=exwm
@@ -301,7 +352,7 @@ This launcher script is invoked by =EXWM.desktop= to start Emacs and load our de
   compton &
 
   # Fire it up
-  exec dbus-launch --exit-with-session emacs -mm --debug-init -l /home/bruno/.emacs.d/desktop.el
+  exec dbus-launch --exit-with-session emacs -mm --debug-init -l /home/bruno/.config/emacs/desktop.el
 
 #+end_src
 

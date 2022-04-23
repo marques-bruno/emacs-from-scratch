@@ -6,7 +6,7 @@
     (interactive)
     ;; NOTE: You will need to update this to a valid background path!
     (start-process-shell-command
-        "feh" nil  "feh --bg-scale /usr/share/backgrounds/coffee.jpg"))
+        "feh" nil  "feh --bg-scale /usr/share/backgrounds/ubuntu-default-greyscale-wallpaper.png"))
 
   (defun efs/exwm-init-hook ()
     ;; Make workspace 1 be the one where we land at startup
@@ -175,10 +175,10 @@
                             (exwm-workspace-switch-create ,i))))
                       (number-sequence 0 9))))
 
-    (define-key (current-global-map) (kbd "s-h") 'windmove-left)
-    (define-key (current-global-map) (kbd "s-l") 'windmove-right)
-    (define-key (current-global-map) (kbd "s-j") 'windmove-down)
-    (define-key (current-global-map) (kbd "s-k") 'windmove-up)
+    (define-key (current-global-map) (kbd "s-M-h") 'windmove-left)
+    (define-key (current-global-map) (kbd "s-M-l") 'windmove-right)
+    (define-key (current-global-map) (kbd "s-M-j") 'windmove-down)
+    (define-key (current-global-map) (kbd "s-M-k") 'windmove-up)
 
     (exwm-input-set-key (kbd "s-SPC") 'counsel-linux-app)
     (exwm-input-set-key (kbd "s-f") 'exwm-layout-toggle-fullscreen)

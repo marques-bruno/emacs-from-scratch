@@ -93,6 +93,8 @@
                 eshell-mode-hook))
   (add-hook mode (lambda () (display-line-numbers-mode 0))))
 
+(use-package all-the-icons)
+
 (set-face-attribute 'default nil :font "Fira Code Retina" :height efs/default-font-size)
 
 ;; Set the fixed pitch face
@@ -145,8 +147,6 @@
 
 (use-package doom-themes
   :init (load-theme 'doom-dark+ t))
-
-(use-package all-the-icons)
 
 (use-package doom-modeline
   :init (doom-modeline-mode 1)
@@ -477,6 +477,8 @@
     :prefix lsp-keymap-prefix
     "d" '(dap-hydra t :wk "debugger")))
 
+    message()
+
 (use-package typescript-mode
   :mode "\\.ts\\'"
   :hook (typescript-mode . lsp-deferred)
@@ -526,41 +528,41 @@
 (with-eval-after-load 'lsp-mode
   (require 'dap-cpptools))
 
-;; ;; THIS SNIPPET WAS RAN ONCE AND ENABLED SOME FEATURES I DIDNT HAVE BEFORE...
-;; ;; INCLUDING HELM SUPPORT, WHICH IS PRETTY GREAT. DO NOT DELETE AND YOU MIGHT WANT
-;; ;; TO EVAL THIS SNIPPET AT LEAST ONCE ON A NEW SYSTEM. MAYBE I SHOULD EVEN HAVE IT PERSISTENT... WE'LL SEE
-;; (use-package lsp-mode)
-;; (use-package yasnippet)
-;; (use-package lsp-treemacs)
-;; (use-package helm-lsp)
-;; (use-package hydra)
-;; (use-package avy)
-;; (use-package helm-xref)
-;; (use-package dap-mode)
-;; (use-package flycheck)
+;; THIS SNIPPET WAS RAN ONCE AND ENABLED SOME FEATURES I DIDNT HAVE BEFORE...
+;; INCLUDING HELM SUPPORT, WHICH IS PRETTY GREAT. DO NOT DELETE AND YOU MIGHT WANT
+;; TO EVAL THIS SNIPPET AT LEAST ONCE ON A NEW SYSTEM. MAYBE I SHOULD EVEN HAVE IT PERSISTENT... WE'LL SEE
+(use-package lsp-mode)
+(use-package yasnippet)
+(use-package lsp-treemacs)
+(use-package helm-lsp)
+(use-package hydra)
+(use-package avy)
+(use-package helm-xref)
+(use-package dap-mode)
+(use-package flycheck)
 
-;; ;; sample `helm' configuration use https://github.com/emacs-helm/helm/ for details
-;; (helm-mode)
-;; (require 'helm-xref)
-;; (define-key global-map [remap find-file] #'helm-find-files)
-;; (define-key global-map [remap execute-extended-command] #'helm-M-x)
-;; (define-key global-map [remap switch-to-buffer] #'helm-mini)
+;; sample `helm' configuration use https://github.com/emacs-helm/helm/ for details
+(helm-mode)
+(require 'helm-xref)
+(define-key global-map [remap find-file] #'helm-find-files)
+(define-key global-map [remap execute-extended-command] #'helm-M-x)
+(define-key global-map [remap switch-to-buffer] #'helm-mini)
 
-;; (which-key-mode)
-;; (add-hook 'c-mode-hook 'lsp)
-;; (add-hook 'c++-mode-hook 'lsp)
+(which-key-mode)
+(add-hook 'c-mode-hook 'lsp)
+(add-hook 'c++-mode-hook 'lsp)
 
-;; (setq gc-cons-threshold (* 100 1024 1024)
-;;       read-process-output-max (* 1024 1024)
-;;       treemacs-space-between-root-nodes nil
-;;       company-idle-delay 0.0
-;;       company-minimum-prefix-length 1
-;;       lsp-idle-delay 0.1)  ;; clangd is fast
+(setq gc-cons-threshold (* 100 1024 1024)
+      read-process-output-max (* 1024 1024)
+      treemacs-space-between-root-nodes nil
+      company-idle-delay 0.0
+      company-minimum-prefix-length 1
+      lsp-idle-delay 0.1)  ;; clangd is fast
 
-;; (with-eval-after-load 'lsp-mode
-;;   (add-hook 'lsp-mode-hook #'lsp-enable-which-key-integration)
-;;   (require 'dap-cpptools)
-;;   (yas-global-mode))
+(with-eval-after-load 'lsp-mode
+  (add-hook 'lsp-mode-hook #'lsp-enable-which-key-integration)
+  (require 'dap-cpptools)
+  (yas-global-mode))
 
 (use-package cmake-mode
   :defer t
