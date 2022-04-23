@@ -770,7 +770,6 @@ Try these commands with =M-x=:
       :prefix lsp-keymap-prefix
       "d" '(dap-hydra t :wk "debugger")))
 
-      message()
 #+end_src
 
 *** TypeScript
@@ -843,17 +842,17 @@ You can use the pyvenv package to use =virtualenv= environments in Emacs.  The =
 ;; clang-format
 (use-package clang-format)
 
-(add-hook 'c-mode-common-hook
-           (function (lambda ()
-                    (add-hook 'write-contents-functions
-                              (lambda() (progn (clang-format-buffer) nil))))))
- (add-hook 'cpp-mode-common-hook
-          (function (lambda ()
-                      (add-hook 'write-contents-functions
-                                (lambda() (progn (clang-format-buffer) nil))))))
+;; (add-hook 'c-mode-common-hook
+;;            (function (lambda ()
+;;                     (add-hook 'write-contents-functions
+;;                               (lambda() (progn (clang-format-buffer) nil))))))
+;;  (add-hook 'cpp-mode-common-hook
+;;           (function (lambda ()
+;;                       (add-hook 'write-contents-functions
+;;                                 (lambda() (progn (clang-format-buffer) nil))))))
 
-(add-hook 'c++-mode-hook 'lsp-deferred)
-(add-hook 'c-mode-hook 'lsp-deferred)
+;; (add-hook 'c++-mode-hook 'lsp-deferred)
+;; (add-hook 'c-mode-hook 'lsp-deferred)
 
 (global-set-key (kbd "C-c l = r") 'clang-format-region)
 (global-set-key (kbd "C-c l = =") 'clang-format-buffer)

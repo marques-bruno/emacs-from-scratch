@@ -477,8 +477,6 @@
     :prefix lsp-keymap-prefix
     "d" '(dap-hydra t :wk "debugger")))
 
-    message()
-
 (use-package typescript-mode
   :mode "\\.ts\\'"
   :hook (typescript-mode . lsp-deferred)
@@ -503,17 +501,17 @@
 ;; clang-format
 (use-package clang-format)
 
-(add-hook 'c-mode-common-hook
-           (function (lambda ()
-                    (add-hook 'write-contents-functions
-                              (lambda() (progn (clang-format-buffer) nil))))))
- (add-hook 'cpp-mode-common-hook
-          (function (lambda ()
-                      (add-hook 'write-contents-functions
-                                (lambda() (progn (clang-format-buffer) nil))))))
+;; (add-hook 'c-mode-common-hook
+;;            (function (lambda ()
+;;                     (add-hook 'write-contents-functions
+;;                               (lambda() (progn (clang-format-buffer) nil))))))
+;;  (add-hook 'cpp-mode-common-hook
+;;           (function (lambda ()
+;;                       (add-hook 'write-contents-functions
+;;                                 (lambda() (progn (clang-format-buffer) nil))))))
 
-(add-hook 'c++-mode-hook 'lsp-deferred)
-(add-hook 'c-mode-hook 'lsp-deferred)
+;; (add-hook 'c++-mode-hook 'lsp-deferred)
+;; (add-hook 'c-mode-hook 'lsp-deferred)
 
 (global-set-key (kbd "C-c l = r") 'clang-format-region)
 (global-set-key (kbd "C-c l = =") 'clang-format-buffer)
