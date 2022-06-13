@@ -27,26 +27,32 @@
 (add-hook 'emacs-startup-hook #'efs/display-startup-time)
 
 ;; Initialize package sources
-(require 'package)
+  (require 'package)
 
-(setq package-archives '(("melpa" . "https://melpa.org/packages/")
-                         ("org" . "https://orgmode.org/elpa/")
-                         ("elpa" . "https://elpa.gnu.org/packages/")))
+  (setq package-archives '(("melpa" . "https://melpa.org/packages/")
+                           ("org" . "https://orgmode.org/elpa/")
+                           ("elpa" . "https://elpa.gnu.org/packages/")))
 
-(package-initialize)
-(unless package-archive-contents
-  (package-refresh-contents))
+  (package-initialize)
+  (unless package-archive-contents
+    (package-refresh-contents))
 
-  ;; Initialize use-package on non-Linux platforms
-(unless (package-installed-p 'use-package)
-  (package-install 'use-package))
+    ;; Initialize use-package on non-Linux platforms
+  (unless (package-installed-p 'use-package)
+    (package-install 'use-package))
 
-(require 'use-package)
-(setq use-package-always-ensure t)
+  (require 'use-package)
+  (setq use-package-always-ensure t)
+
+  (use-package exec-path-from-shell)
+(when (memq window-system '(mac ns x))
+  (exec-path-from-shell-initialize))
+(when (daemonp)
+  (exec-path-from-shell-initialize))
 
 (use-package auto-package-update
   :custom
-  (auto-package-update-interval 7)
+  (auto-package-update-interval 14)
   (auto-package-update-prompt-before-update t)
   (auto-package-update-hide-results t)
   :config
@@ -102,6 +108,65 @@
 
 ;; Set the variable pitch face
 (set-face-attribute 'variable-pitch nil :font "Cantarell" :height efs/default-variable-font-size :weight 'regular)
+
+(defun fira-code-mode--make-alist (list)
+  "Generate prettify-symbols alist from LIST."
+  (let ((idx -1))
+    (mapcar
+     (lambda (s)
+       (setq idx (1+ idx))
+       (let* ((code (+ #Xe100 idx))
+          (width (string-width s))
+          (prefix ())
+          (suffix '(?\s (Br . Br)))
+          (n 1))
+     (while (< n width)
+       (setq prefix (append prefix '(?\s (Br . Bl))))
+       (setq n (1+ n)))
+     (cons s (append prefix suffix (list (decode-char 'ucs code))))))
+     list)))
+
+(defconst fira-code-mode--ligatures
+  '("www" "**" "***" "**/" "*>" "*/" "\\\\" "\\\\\\"
+    "{-" "[]" "::" ":::" ":=" "!!" "!=" "!==" "-}"
+    "--" "---" "-->" "->" "->>" "-<" "-<<" "-~"
+    "#{" "#[" "##" "###" "####" "#(" "#?" "#_" "#_("
+    ".-" ".=" ".." "..<" "..." "?=" "??" ";;" "/*"
+    "/**" "/=" "/==" "/>" "//" "///" "&&" "||" "||="
+    "|=" "|>" "^=" "$>" "++" "+++" "+>" "=:=" "=="
+    "===" "==>" "=>" "=>>" "<=" "=<<" "=/=" ">-" ">="
+    ">=>" ">>" ">>-" ">>=" ">>>" "<*" "<*>" "<|" "<|>"
+    "<$" "<$>" "<!--" "<-" "<--" "<->" "<+" "<+>" "<="
+    "<==" "<=>" "<=<" "<>" "<<" "<<-" "<<=" "<<<" "<~"
+    "<~~" "</" "</>" "~@" "~-" "~=" "~>" "~~" "~~>" "%%"
+    "x" ":" "+" "+" "*"))
+
+(defvar fira-code-mode--old-prettify-alist)
+
+(defun fira-code-mode--enable ()
+  "Enable Fira Code ligatures in current buffer."
+  (setq-local fira-code-mode--old-prettify-alist prettify-symbols-alist)
+  (setq-local prettify-symbols-alist (append (fira-code-mode--make-alist fira-code-mode--ligatures) fira-code-mode--old-prettify-alist))
+  (prettify-symbols-mode t))
+
+(defun fira-code-mode--disable ()
+  "Disable Fira Code ligatures in current buffer."
+  (setq-local prettify-symbols-alist fira-code-mode--old-prettify-alist)
+  (prettify-symbols-mode -1))
+
+(define-minor-mode fira-code-mode
+  "Fira Code ligatures minor mode"
+  :lighter " Fira Code"
+  (setq-local prettify-symbols-unprettify-at-point 'right-edge)
+  (if fira-code-mode
+      (fira-code-mode--enable)
+    (fira-code-mode--disable)))
+
+(defun fira-code-mode--setup ()
+  "Setup Fira Code Symbols"
+  (set-fontset-font t '(#Xe100 . #Xe16f) "Fira Code Symbol"))
+
+(provide 'fira-code-mode)
 
 ;; Make ESC quit prompts
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
@@ -436,6 +501,10 @@
 
 (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
 
+;; Bunch of snippets for almost all imaginable languages
+;; Use M-x yas-describe-tables to see options in current buffer's language mode
+(use-package yasnippet-snippets)
+
 (defun efs/lsp-mode-setup ()
   (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
   (lsp-headerline-breadcrumb-mode))
@@ -462,20 +531,22 @@
 (use-package dap-mode
   ;; Uncomment the config below if you want all UI panes to be hidden by default!
   ;; :custom
-  ;; (lsp-enable-dap-auto-configure nil)
-  ;; :config
-  ;; (dap-ui-mode 1)
+  :custom
+  (dap-lldb-debug-program `(,(expand-file-name "/home/bruno/projects/llvm-project/build/bin/lldb-vscode")))
+  ;;(lsp-enable-dap-auto-configure nil)
+  ;;:config
+  ;;(dap-ui-mode 1)
   :commands dap-debug
   :config
   ;; Set up Node debugging
   (require 'dap-node)
   (dap-node-setup) ;; Automatically installs Node debug adapter if needed
-
   ;; Bind `C-c l d` to `dap-hydra` for easy access
   (general-define-key
     :keymaps 'lsp-mode-map
     :prefix lsp-keymap-prefix
-    "d" '(dap-hydra t :wk "debugger")))
+    "d" '(dap-hydra t :wk "debugger"))
+  )
 
 (use-package typescript-mode
   :mode "\\.ts\\'"
@@ -484,14 +555,36 @@
   (setq typescript-indent-level 2))
 
 (use-package flycheck)
-(use-package python-mode
+  (use-package python-mode
+    :ensure t
+    :hook (python-mode . lsp-deferred)
+    :custom
+    ;; NOTE: Set these if Python 3 is called "python3" on your system!
+    (python-shell-interpreter "/usr/bin/python3")
+    (require 'dap-python)
+  )
+  
+  (use-package exec-path-from-shell)
+
+(when (memq window-system '(mac ns x))
+  (exec-path-from-shell-initialize))
+(when (daemonp)
+  (exec-path-from-shell-initialize))
+
+(setenv "PYTHONPATH" "/usr/local/lib/python3.8/site-packages")
+
+
+(use-package pyvenv
   :ensure t
-  :hook (python-mode . lsp-deferred)
-  :custom
-  ;; NOTE: Set these if Python 3 is called "python3" on your system!
-  (python-shell-interpreter "/usr/bin/python3")
-  (require 'dap-python)
-)
+  :config
+  (pyvenv-mode t)
+  ;; Set correct Python interpreter
+  (setq pyvenv-post-activate-hooks
+        (list (lambda ()
+                (setq python-shell-interpreter (concat pyvenv-virtual-env "bin/python3")))))
+  (setq pyvenv-post-deactivate-hooks
+        (list (lambda ()
+                (setq python-shell-interpreter "python3")))))
 
 ;; (use-package pyvenv
 ;;   :after python-mode
@@ -499,68 +592,59 @@
 ;;   (pyvenv-mode 1))
 
 ;; clang-format
-(use-package clang-format)
+  (use-package clang-format)
 
-;; (add-hook 'c-mode-common-hook
-;;            (function (lambda ()
-;;                     (add-hook 'write-contents-functions
-;;                               (lambda() (progn (clang-format-buffer) nil))))))
-;;  (add-hook 'cpp-mode-common-hook
-;;           (function (lambda ()
-;;                       (add-hook 'write-contents-functions
-;;                                 (lambda() (progn (clang-format-buffer) nil))))))
+  (use-package google-c-style)
 
-;; (add-hook 'c++-mode-hook 'lsp-deferred)
-;; (add-hook 'c-mode-hook 'lsp-deferred)
+  (global-set-key (kbd "C-c l = r") 'clang-format-region)
+  (global-set-key (kbd "C-c l = =") 'clang-format-buffer)
 
-(global-set-key (kbd "C-c l = r") 'clang-format-region)
-(global-set-key (kbd "C-c l = =") 'clang-format-buffer)
+  (setq gc-cons-threshold (* 100 1024 1024)
+        read-process-output-max (* 1024 1024)
+        treemacs-space-between-root-nodes nil
+        company-idle-delay 0.0
+        company-minimum-prefix-length 1
+        lsp-idle-delay 0.1)  ;; clangd is fast
 
-(setq gc-cons-threshold (* 100 1024 1024)
-      read-process-output-max (* 1024 1024)
-      treemacs-space-between-root-nodes nil
-      company-idle-delay 0.0
-      company-minimum-prefix-length 1
-      lsp-idle-delay 0.1)  ;; clangd is fast
+  (with-eval-after-load 'lsp-mode
+    (require 'dap-lldb))
 
-(with-eval-after-load 'lsp-mode
-  (require 'dap-cpptools))
+  ;; THIS SNIPPET WAS RAN ONCE AND ENABLED SOME FEATURES I DIDNT HAVE BEFORE...
+  ;; INCLUDING HELM SUPPORT, WHICH IS PRETTY GREAT. DO NOT DELETE AND YOU MIGHT WANT
+  ;; TO EVAL THIS SNIPPET AT LEAST ONCE ON A NEW SYSTEM. MAYBE I SHOULD EVEN HAVE IT PERSISTENT... WE'LL SEE
+  (use-package lsp-mode)
+  (use-package yasnippet)
+  (use-package lsp-treemacs)
+  (use-package helm-lsp)
+  (use-package hydra)
+  (use-package avy)
+  (use-package helm-xref)
+  (use-package dap-mode)
+  (use-package flycheck)
 
-;; THIS SNIPPET WAS RAN ONCE AND ENABLED SOME FEATURES I DIDNT HAVE BEFORE...
-;; INCLUDING HELM SUPPORT, WHICH IS PRETTY GREAT. DO NOT DELETE AND YOU MIGHT WANT
-;; TO EVAL THIS SNIPPET AT LEAST ONCE ON A NEW SYSTEM. MAYBE I SHOULD EVEN HAVE IT PERSISTENT... WE'LL SEE
-(use-package lsp-mode)
-(use-package yasnippet)
-(use-package lsp-treemacs)
-(use-package helm-lsp)
-(use-package hydra)
-(use-package avy)
-(use-package helm-xref)
-(use-package dap-mode)
-(use-package flycheck)
+  ;; sample `helm' configuration use https://github.com/emacs-helm/helm/ for details
+  (helm-mode)
+  (require 'helm-xref)
+  (define-key global-map [remap find-file] #'helm-find-files)
+  (define-key global-map [remap execute-extended-command] #'helm-M-x)
+  (define-key global-map [remap switch-to-buffer] #'helm-mini)
 
-;; sample `helm' configuration use https://github.com/emacs-helm/helm/ for details
-(helm-mode)
-(require 'helm-xref)
-(define-key global-map [remap find-file] #'helm-find-files)
-(define-key global-map [remap execute-extended-command] #'helm-M-x)
-(define-key global-map [remap switch-to-buffer] #'helm-mini)
+  (which-key-mode)
+  (add-hook 'c-mode-hook 'lsp)
+  (add-hook 'c++-mode-hook 'lsp)
 
-(which-key-mode)
-(add-hook 'c-mode-hook 'lsp)
-(add-hook 'c++-mode-hook 'lsp)
+  (setq gc-cons-threshold (* 100 1024 1024)
+        read-process-output-max (* 1024 1024)
+        treemacs-space-between-root-nodes nil
+        company-idle-delay 0.0
+        company-minimum-prefix-length 1
+        lsp-idle-delay 0.1)  ;; clangd is fast
 
-(setq gc-cons-threshold (* 100 1024 1024)
-      read-process-output-max (* 1024 1024)
-      treemacs-space-between-root-nodes nil
-      company-idle-delay 0.0
-      company-minimum-prefix-length 1
-      lsp-idle-delay 0.1)  ;; clangd is fast
-
-(with-eval-after-load 'lsp-mode
-  (add-hook 'lsp-mode-hook #'lsp-enable-which-key-integration)
-  (require 'dap-cpptools)
-  (yas-global-mode))
+  (with-eval-after-load 'lsp-mode
+    (add-hook 'lsp-mode-hook #'lsp-enable-which-key-integration)
+    (require 'dap-lldb)
+    (yas-global-mode)
+)
 
 (use-package cmake-mode
   :defer t
@@ -597,7 +681,7 @@
   :custom
   (company-minimum-prefix-length 1)
   (company-idle-delay 0.0))
-
+  (setq company-clang-arguments '("-std=c++17"))
 (use-package company-box
   :hook (company-mode . company-box-mode))
 
@@ -633,6 +717,11 @@
 
 (use-package rainbow-delimiters
   :hook (prog-mode . rainbow-delimiters-mode))
+
+(use-package wakatime-mode)
+(global-wakatime-mode)
+(setq wakatime-api-key "8846bc29-6137-4c3e-ab23-1c8a4bbecef4")
+(setq wakatime-cli-path "/home/bruno/.wakatime/wakatime-cli")
 
 (use-package term
   :commands term
