@@ -736,13 +736,6 @@ This snippet adds a hook to =org-mode= buffers so that =efs/org-babel-tangle-con
 
 * Development
 
-** Yasnippet:
-#+begin_src emacs-lisp
-;; Bunch of snippets for almost all imaginable languages
-;; Use M-x yas-describe-tables to see options in current buffer's language mode
-(use-package yasnippet-snippets)
-#+end_src
-
 ** Languages
 
 *** IDE Features with lsp-mode
@@ -1023,7 +1016,8 @@ You can use the pyvenv package to use =virtualenv= environments in Emacs.  The =
                 (if file (file-name-as-directory file))))))
 #+end_src
 
-** Company Mode
+** Company 
+Mode
 
 [[http://company-mode.github.io/][Company Mode]] provides a nicer in-buffer completion interface than =completion-at-point= which is more reminiscent of what you would expect from an IDE.  We add a simple configuration to make the keybindings a little more useful (=TAB= now completes the selection and initiates completion at the current location if needed).
 
@@ -1121,6 +1115,18 @@ Emacs' built in commenting functionality =comment-dwim= (usually bound to =M-;=)
 (setq wakatime-cli-path "/home/bruno/.wakatime/wakatime-cli")
 #+end_src
 
+
+** Yasnippet:
+#+begin_src emacs-lisp
+  ;; Bunch of snippets for almost all imaginable languages
+  ;; Use M-x yas-describe-tables to see options in current buffer's language mode
+  (use-package yasnippet-snippets)
+
+  ;; Bind `C-c y' to `yas-expand' ONLY.
+  (define-key yas-minor-mode-map (kbd "C-c y") #'yas-expand)
+  (define-key yas-minor-mode-map (kbd "C-c s") #'yas-insert-snippet)
+
+#+end_src
 
 
 * Terminals

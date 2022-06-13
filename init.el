@@ -501,10 +501,6 @@
 
 (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
 
-;; Bunch of snippets for almost all imaginable languages
-;; Use M-x yas-describe-tables to see options in current buffer's language mode
-(use-package yasnippet-snippets)
-
 (defun efs/lsp-mode-setup ()
   (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
   (lsp-headerline-breadcrumb-mode))
@@ -722,6 +718,14 @@
 (global-wakatime-mode)
 (setq wakatime-api-key "8846bc29-6137-4c3e-ab23-1c8a4bbecef4")
 (setq wakatime-cli-path "/home/bruno/.wakatime/wakatime-cli")
+
+;; Bunch of snippets for almost all imaginable languages
+;; Use M-x yas-describe-tables to see options in current buffer's language mode
+(use-package yasnippet-snippets)
+
+;; Bind `C-c y' to `yas-expand' ONLY.
+(define-key yas-minor-mode-map (kbd "C-c y") #'yas-expand)
+(define-key yas-minor-mode-map (kbd "C-c s") #'yas-insert-snippet)
 
 (use-package term
   :commands term
