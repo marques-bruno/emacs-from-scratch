@@ -1,3 +1,5 @@
+# M-x org-schedule 
+
 * Inbox
 
 ** TODO Commit config updates

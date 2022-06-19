@@ -1,4 +1,4 @@
-* TODO Brush my teeth
+* TODO Workout
 SCHEDULED: <2020-10-10 Sat +1d>
 :PROPERTIES:
 :STYLE:    habit
